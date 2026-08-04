@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach — Rive preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "DIN Rounded", system-ui, -apple-system, sans-serif;
+    background: #f5f5f7; color: #3c3c3c;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 28px 16px 60px;
+  }
+  h1 { font-size: 20px; font-weight: 800; letter-spacing: .5px; }
+  .sub { color: #8f8f8f; font-size: 13px; margin: 4px 0 18px; }
+  #stage {
+    width: min(420px, 92vw); aspect-ratio: 600/700;
+    background: #ffffff; border: 2px solid #e5e5e5; border-radius: 24px;
+    box-shadow: 0 4px 0 #e5e5e5; overflow: hidden;
+  }
+  canvas { width: 100%; height: 100%; display: block; }
+  #controls { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 22px; max-width: 480px; }
+  .btn {
+    font: inherit; font-size: 15px; font-weight: 800; letter-spacing: .5px; cursor: pointer;
+    border: 0; border-radius: 14px; padding: 13px 20px; color: #fff;
+    background: #58cc02; box-shadow: 0 4px 0 #46a302;
+    transition: transform .08s, box-shadow .08s; user-select: none; text-transform: uppercase;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 0 0 #46a302; }
+  .btn.alt { background: #1cb0f6; box-shadow: 0 4px 0 #1484c2; }
+  .btn.alt:active { box-shadow: 0 0 0 #1484c2; }
+  .btn.warm { background: #ff9600; box-shadow: 0 4px 0 #cc7800; }
+  .btn.warm:active { box-shadow: 0 0 0 #cc7800; }
+  #status { margin-top: 18px; font-size: 13px; color: #8f8f8f; min-height: 1.2em; }
+  #status.on { color: #46a302; font-weight: 700; }
+  .err { max-width: 480px; color: #c8003a; font-size: 13px; margin-top: 14px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <h1>COACH · RIVE PREVIEW</h1>
+  <p class="sub">Duolingo-style rig · two-layer state machine (Body + Face)</p>
+  <div id="stage"><canvas id="c"></canvas></div>
+  <div id="controls"></div>
+  <p id="status">loading…</p>
+  <div class="err" id="err"></div>
+
+  <script type="module">
+    import rive from "https://cdn.jsdelivr.net/npm/@rive-app/webgl2@2.31.5/+esm";
+
+    const statusEl = document.getElementById("status");
+    const errEl = document.getElementById("err");
+    const controls = document.getElementById("controls");
+
+    const ACTIONS = [
+      ["waveTrigger", "Wave", ""],
+      ["flexTrigger", "Flex", "alt"],
+      ["cheerTrigger", "Cheer", "warm"],
+      ["nodTrigger", "Nod", "alt"],
+      ["sadTrigger", "Sad", ""],
+    ];
+
+    try {
+      const r = new rive.Rive({
+        src: "./coach.riv",
+        canvas: document.getElementById("c"),
+        artboard: "Coach",
+        stateMachines: "Coach",
+        autoplay: true,
+        layout: new rive.Layout({ fit: rive.Fit.Contain, alignment: rive.Alignment.Center }),
+        onLoad: () => {
+          const smInputs = r.stateMachineInputs("Coach");
+          const smNames = r.stateMachineNames;
+          statusEl.textContent = "loaded · " + r.animationNames.join(", ");
+          statusEl.className = "on";
+          console.log("state machines:", smNames);
+          console.log("inputs:", smInputs.map(i => i.name + ":" + i.type));
+
+          for (const [name, label, cls] of ACTIONS) {
+            const input = smInputs.find(i => i.name === name);
+            const b = document.createElement("button");
+            b.className = "btn" + (cls ? " " + cls : "");
+            b.textContent = label;
+            b.onclick = () => {
+              if (input) { input.fire(); pulse(b, label); }
+              else { errEl.textContent = "input not found: " + name + " — got: " + smInputs.map(i=>i.name).join(", "); }
+            };
+            if (!input) b.style.opacity = .45;
+            controls.appendChild(b);
+          }
+          if (!smInputs.length) errEl.textContent = "No inputs found on state machine 'Coach'. SMs: " + smNames.join(", ");
+        },
+        onLoadError: (e) => { statusEl.textContent = "load error"; errEl.textContent = String(e && e.message || e); },
+      });
+
+      function pulse(b, label) {
+        statusEl.textContent = label + "!";
+        statusEl.className = "on";
+        clearTimeout(pulse.t);
+        pulse.t = setTimeout(() => { statusEl.textContent = "idle"; }, 1600);
+      }
+    } catch (e) {
+      statusEl.textContent = "runtime error";
+      errEl.textContent = String(e && e.message || e);
+    }
+  </script>
+</body>
+</html>

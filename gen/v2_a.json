@@ -1,0 +1,28 @@
+[
+  {
+    "id": "b4604083-6f41-48c3-890b-3acc5135e441",
+    "status": "completed",
+    "display_name": "Nano Banana Pro",
+    "job_set_type": "nano_banana_2",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034824_b4604083-6f41-48c3-890b-3acc5135e441.png",
+    "created_at": 1785815304.267487,
+    "params": {
+      "width": 1792,
+      "height": 2400,
+      "aspect_ratio": "3:4",
+      "resolution": "2k",
+      "batch_size": 1,
+      "input_images": [
+        {
+          "id": "8c7b072a-49db-4d2d-9475-01ac5997ebfc",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/8c7b072a-49db-4d2d-9475-01ac5997ebfc_resize.jpg",
+          "type": "media_input"
+        }
+      ],
+      "input_image": null,
+      "application": null,
+      "surface": null,
+      "prompt": "Redraw this exact character in a cleaner Duolingo mobile-game mascot style: FLAT vector illustration, bold uniform dark outline, completely flat solid color fills with NO gradients, NO shading, NO internal muscle lines. Slightly larger head, chunky rounded simple shapes, simple black dot eyes, friendly open smile. Full body front view, standing straight, arms held out and clearly separated from the torso with a visible gap, legs slightly apart and clearly separated from each other. Isolated on a plain flat white background. No text, no lettering, no props, no shadow."
+    }
+  }
+]

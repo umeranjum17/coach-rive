@@ -1,0 +1,28 @@
+[
+  {
+    "id": "4033ba2d-dbba-48e1-b933-d83f0e05a35b",
+    "status": "completed",
+    "display_name": "Nano Banana Pro",
+    "job_set_type": "nano_banana_2",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034826_4033ba2d-dbba-48e1-b933-d83f0e05a35b.png",
+    "created_at": 1785815306.289365,
+    "params": {
+      "width": 1792,
+      "height": 2400,
+      "aspect_ratio": "3:4",
+      "resolution": "2k",
+      "batch_size": 1,
+      "input_images": [
+        {
+          "id": "a7a1afe8-a487-4628-93c4-1b6771d7558f",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/a7a1afe8-a487-4628-93c4-1b6771d7558f_resize.jpg",
+          "type": "media_input"
+        }
+      ],
+      "input_image": null,
+      "application": null,
+      "surface": null,
+      "prompt": "Redraw this character as a flat vector Duolingo-style mascot, T-pose with arms straight out to both sides fully clear of the body, legs straight and apart, flat solid colors, bold dark outline, no shading, no internal detail lines, plain white background, full body, centered, no text"
+    }
+  }
+]

@@ -1,0 +1,78 @@
+[
+  {
+    "id": "1599e3a9-50cb-41cb-a793-348d76b1d020",
+    "status": "completed",
+    "display_name": "Recraft V4.1",
+    "job_set_type": "recraft_v4_1",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034527_1599e3a9-50cb-41cb-a793-348d76b1d020.svg",
+    "created_at": 1785815127.801157,
+    "params": {
+      "prompt": "friendly cartoon gym coach mascot, flat vector, standing, full body",
+      "width": 768,
+      "height": 1024,
+      "aspect_ratio": "3:4",
+      "resolution": "1k",
+      "model_type": "vector",
+      "batch_size": 4,
+      "colors": [],
+      "background_color": null
+    }
+  },
+  {
+    "id": "3cdfd785-505f-45c3-9c86-e7d2ffbeebd6",
+    "status": "completed",
+    "display_name": "Recraft V4.1",
+    "job_set_type": "recraft_v4_1",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034527_3cdfd785-505f-45c3-9c86-e7d2ffbeebd6.svg",
+    "created_at": 1785815127.801189,
+    "params": {
+      "prompt": "friendly cartoon gym coach mascot, flat vector, standing, full body",
+      "width": 768,
+      "height": 1024,
+      "aspect_ratio": "3:4",
+      "resolution": "1k",
+      "model_type": "vector",
+      "batch_size": 4,
+      "colors": [],
+      "background_color": null
+    }
+  },
+  {
+    "id": "696c0c65-3b54-4c2c-8b10-7eac21c602a0",
+    "status": "completed",
+    "display_name": "Recraft V4.1",
+    "job_set_type": "recraft_v4_1",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034527_696c0c65-3b54-4c2c-8b10-7eac21c602a0.svg",
+    "created_at": 1785815127.801213,
+    "params": {
+      "prompt": "friendly cartoon gym coach mascot, flat vector, standing, full body",
+      "width": 768,
+      "height": 1024,
+      "aspect_ratio": "3:4",
+      "resolution": "1k",
+      "model_type": "vector",
+      "batch_size": 4,
+      "colors": [],
+      "background_color": null
+    }
+  },
+  {
+    "id": "c86bbd71-9469-48e9-a5ec-f167505391de",
+    "status": "completed",
+    "display_name": "Recraft V4.1",
+    "job_set_type": "recraft_v4_1",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034527_c86bbd71-9469-48e9-a5ec-f167505391de.svg",
+    "created_at": 1785815127.801235,
+    "params": {
+      "prompt": "friendly cartoon gym coach mascot, flat vector, standing, full body",
+      "width": 768,
+      "height": 1024,
+      "aspect_ratio": "3:4",
+      "resolution": "1k",
+      "model_type": "vector",
+      "batch_size": 4,
+      "colors": [],
+      "background_color": null
+    }
+  }
+]

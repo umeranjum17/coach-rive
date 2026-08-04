@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+const R = "/home/umer/.local/share/mise/installs/node/26.1.0/lib/node_modules/rive-mcp-server";
+const [{ RiveHost }, { PAGE_SCRIPT }] = await Promise.all([import(R+"/dist/riveHost.js"), import(R+"/dist/pageScript.js")]);
+const host = new RiveHost(PAGE_SCRIPT);
+const info = await host.inspect(readFileSync("coach.riv"));
+const ab = info.artboards[0];
+console.log("artboard:", ab.name, ab.width+"x"+ab.height);
+console.log("animations:", ab.animations.map(a=>a.name).join(", "));
+console.log("stateMachines:", JSON.stringify(ab.stateMachines.map(s=>({name:s.name,inputs:s.inputs}))));
+await host.close();

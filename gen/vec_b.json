@@ -1,0 +1,78 @@
+[
+  {
+    "id": "8e457f50-a108-4cd4-b75c-23f9a90d1609",
+    "status": "completed",
+    "display_name": "Recraft V4.1",
+    "job_set_type": "recraft_v4_1",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034527_8e457f50-a108-4cd4-b75c-23f9a90d1609.svg",
+    "created_at": 1785815127.728952,
+    "params": {
+      "prompt": "cute chunky cartoon fitness coach character, flat vector illustration, front view, arms out to the sides, legs apart, bold flat colors, thick rounded shapes, plain white background, no text, no lettering",
+      "width": 768,
+      "height": 1024,
+      "aspect_ratio": "3:4",
+      "resolution": "1k",
+      "model_type": "vector",
+      "batch_size": 4,
+      "colors": [],
+      "background_color": null
+    }
+  },
+  {
+    "id": "2618d078-0c60-4570-b9ea-f272eef20fe7",
+    "status": "completed",
+    "display_name": "Recraft V4.1",
+    "job_set_type": "recraft_v4_1",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034527_2618d078-0c60-4570-b9ea-f272eef20fe7.svg",
+    "created_at": 1785815127.728996,
+    "params": {
+      "prompt": "cute chunky cartoon fitness coach character, flat vector illustration, front view, arms out to the sides, legs apart, bold flat colors, thick rounded shapes, plain white background, no text, no lettering",
+      "width": 768,
+      "height": 1024,
+      "aspect_ratio": "3:4",
+      "resolution": "1k",
+      "model_type": "vector",
+      "batch_size": 4,
+      "colors": [],
+      "background_color": null
+    }
+  },
+  {
+    "id": "e1ad2078-cdee-4e86-9396-e083280fd8c7",
+    "status": "completed",
+    "display_name": "Recraft V4.1",
+    "job_set_type": "recraft_v4_1",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034527_e1ad2078-cdee-4e86-9396-e083280fd8c7.svg",
+    "created_at": 1785815127.72902,
+    "params": {
+      "prompt": "cute chunky cartoon fitness coach character, flat vector illustration, front view, arms out to the sides, legs apart, bold flat colors, thick rounded shapes, plain white background, no text, no lettering",
+      "width": 768,
+      "height": 1024,
+      "aspect_ratio": "3:4",
+      "resolution": "1k",
+      "model_type": "vector",
+      "batch_size": 4,
+      "colors": [],
+      "background_color": null
+    }
+  },
+  {
+    "id": "67ed6fcd-bb9d-43f9-937b-3d203dace686",
+    "status": "completed",
+    "display_name": "Recraft V4.1",
+    "job_set_type": "recraft_v4_1",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsiM9j3EFaBnEp5pggMmaf1qhR/hf_20260804_034527_67ed6fcd-bb9d-43f9-937b-3d203dace686.svg",
+    "created_at": 1785815127.729044,
+    "params": {
+      "prompt": "cute chunky cartoon fitness coach character, flat vector illustration, front view, arms out to the sides, legs apart, bold flat colors, thick rounded shapes, plain white background, no text, no lettering",
+      "width": 768,
+      "height": 1024,
+      "aspect_ratio": "3:4",
+      "resolution": "1k",
+      "model_type": "vector",
+      "batch_size": 4,
+      "colors": [],
+      "background_color": null
+    }
+  }
+]
