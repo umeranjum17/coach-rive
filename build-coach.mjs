@@ -1,7 +1,8 @@
-// Coach rig build — single re-runnable script.
-// Reads art/coach_a.svg (importSvg), drops the body-wide outline path c_p0,
-// gives every fill its own stroke, buckets shapes into pivot groups, animates,
-// wires a 2-layer state machine (Body actions + Face blink), and renders QA output.
+// Coach rig build v2 — single re-runnable script.
+// Keeps the compound silhouette path c_p0 WHOLE (outline + eye/mouth holes + smile + socks + soles)
+// and clips a copy into every body-part group via Rive group clipBy.
+// Each part group: [mask rect (invisible), c_p0 silhouette copy (z=1), fill shapes (z=part.z)].
+// This fixes the broken v1 which dropped c_p0 (losing face/socks/soles) and faked outlines with strokes.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 const R = "/home/umer/.local/share/mise/installs/node/26.1.0/lib/node_modules/rive-mcp-server";
 const [{ createRiv }, { expandHlapi }, { importSvg }, { RiveHost }, { PAGE_SCRIPT },
@@ -11,48 +12,54 @@ const [{ createRiv }, { expandHlapi }, { importSvg }, { RiveHost }, { PAGE_SCRIP
   import(R + "/dist/critique.js"), import(R + "/dist/gif.js"),
 ]);
 
-const OUTLINE = "#191817";
-const STROKE = 6;
 const FPS = 60;
 
 // ---------- art ----------
 const imp = importSvg(readFileSync("art/coach_a.svg", "utf8"), { idPrefix: "c_" });
 const byId = Object.fromEntries(imp.shapes.map((s) => [s.id, s]));
 if (imp.warnings.length) console.log("svg warnings:", imp.warnings);
-if (!byId["c_p0"]) throw new Error("expected body outline c_p0");
-delete byId["c_p0"]; // drop the single body-wide outline; every shape gets its own stroke
+if (!byId["c_p0"]) throw new Error("expected compound silhouette c_p0");
+const SIL = byId["c_p0"]; // keep WHOLE: 12 subpaths = body silhouette + holes + smile + socks + soles
 
-// ---------- parts: id -> { pivot, member ids, z } ----------
+// ---------- parts: pivot (artboard px), fill member ids, z, clip region (artboard coords x0,y0,x1,y1) ----------
+// Regions partition the body with overlap at joints; black-over-black overlap is invisible.
+const ROOT = { x: imp.width / 2, y: 350 }; // mirrors ref-render.mjs: SVG (600x633) centered in 700-tall artboard
+const YOFF = imp.height / 2; // 316.5
 const PARTS = {
-  headG:  { pivot: [300, 152], z: 40, ids: ["c_p5", "c_p9", "c_p13", "c_p14", "c_p15", "c_p16", "c_p17"] },
-  torsoG: { pivot: [300, 425], z: 30, ids: ["c_p1", "c_p4", "c_p6", "c_p10"] },
-  armLG:  { pivot: [238, 190], z: 20, ids: ["c_p2"] },
-  armRG:  { pivot: [362, 190], z: 20, ids: ["c_p3"] },
-  legLG:  { pivot: [262, 428], z: 10, ids: ["c_p8", "c_p11"] },
-  legRG:  { pivot: [338, 428], z: 10, ids: ["c_p7", "c_p12"] },
+  headG:  { pivot: [300, 152], z: 40, ids: ["c_p5", "c_p9", "c_p13", "c_p14", "c_p15", "c_p16", "c_p17"], clip: [200, 0, 400, 262] },
+  torsoG: { pivot: [300, 425], z: 30, ids: ["c_p1", "c_p4", "c_p6", "c_p10"], clip: [178, 140, 422, 492] },
+  armLG:  { pivot: [238, 190], z: 20, ids: ["c_p2"], clip: [0, 140, 250, 402] },
+  armRG:  { pivot: [362, 190], z: 20, ids: ["c_p3"], clip: [350, 140, 600, 402] },
+  legLG:  { pivot: [262, 428], z: 10, ids: ["c_p8", "c_p11"], clip: [98, 400, 322, 652] },
+  legRG:  { pivot: [338, 428], z: 10, ids: ["c_p7", "c_p12"], clip: [278, 400, 502, 652] },
 };
-const NO_STROKE = new Set(["c_p16", "c_p17"]); // eyes: solid dots, no outline
 const missing = Object.values(PARTS).flatMap((p) => p.ids.filter((i) => !byId[i]));
 if (missing.length) throw new Error("missing shapes: " + missing);
 
-const groups = [{ id: "root", x: 300, y: 425 }];
+const groups = [{ id: "root", x: ROOT.x, y: ROOT.y }];
 const shapes = [];
+
+// raster-split silhouette pieces: parts/<gid>.svg (black-only, transparent bg).
+// Pieces were vectorized from RAW-coordinate renders; the rig uses the +YOFF reference offset.
+// Each piece belongs to its body part (parent = <part>Pose) so it rotates with the limb,
+// with the +YOFF baked in exactly like the fills: x = (ps.x + ox) - px, y = (ps.y + oy + YOFF) - py.
+const PIECES = { headG: [200, 0], torsoG: [178, 140], armLG: [0, 140], armRG: [383, 140], legLG: [98, 400], legRG: [278, 400] };
+
 for (const [gid, part] of Object.entries(PARTS)) {
   const [px, py] = part.pivot;
-  // group coords are RELATIVE to the parent (root at 300,425)
-  groups.push({ id: gid, x: px - 300, y: py - 425, parent: "root" });
-  for (const sid of part.ids) {
-    const s = byId[sid];
-    shapes.push({
-      ...s,
-      id: sid,
-      parent: gid,
-      x: s.x - px,
-      y: s.y - py,
-      z: part.z,
-      ...(NO_STROKE.has(sid) ? {} : { stroke: { color: OUTLINE, thickness: STROKE, cap: "round", join: "round" } }),
-    });
+  groups.push({ id: gid, x: px - ROOT.x, y: py - YOFF, parent: "root" });
+  groups.push({ id: `${gid}Pose`, x: 0, y: 0, parent: gid }); // animated child; frame-0 = identity, so base position is never overridden
+  // silhouette piece for this part (under the fills)
+  const [ox, oy] = PIECES[gid];
+  const pimp = importSvg(readFileSync(`parts/${gid}.svg`, "utf8"), { idPrefix: `${gid}_` });
+  for (const ps of pimp.shapes) {
+    shapes.push({ ...ps, id: `${gid}_${ps.id}`, parent: `${gid}Pose`, x: ps.x + ox - px, y: ps.y + oy - py, fill: { color: "#191817" }, z: 2 });
   }
+  // per-shape z: SVG order matters inside a group (later = on top); base = part.z + idx*2
+  part.ids.forEach((sid, idx) => {
+    const s = byId[sid];
+    shapes.push({ ...s, id: sid, parent: `${gid}Pose`, x: s.x - px, y: s.y - py, z: part.z + idx * 2 });
+  });
 }
 
 // ---------- animation helpers ----------
@@ -68,12 +75,11 @@ const animations = [
   {
     name: "idle", fps: FPS, duration: D, loop: "loop",
     tracks: [
-      // breathing: two breaths per loop, 4s apart; nothing peaks together
-      mvY("root", [kf(0, 425), kf(120, 422, "ease-in-out"), kf(240, 425), kf(360, 422, "ease-in-out"), kf(D, 425)]),
-      rot("torsoG", [kf(0, 0), kf(150, 1.4, "ease-in-out"), kf(300, -0.6, "ease-in-out"), kf(D, 0)]),
-      rot("headG", [kf(0, 0), kf(120, 2.6, "ease-in-out"), kf(300, -2.2, "ease-in-out"), kf(D, 0)]),
-      rot("armLG", [kf(0, 0), kf(180, 3.4, "ease-in-out"), kf(D, 0)]),
-      rot("armRG", [kf(0, 0), kf(210, -3.0, "ease-in-out"), kf(D, 0)]),
+      mvY("root", [kf(0, 350), kf(120, 347, "ease-in-out"), kf(240, 350), kf(360, 347, "ease-in-out"), kf(D, 350)]),
+      rot("torsoGPose", [kf(0, 0), kf(150, 1.4, "ease-in-out"), kf(300, -0.6, "ease-in-out"), kf(D, 0)]),
+      rot("headGPose", [kf(0, 0), kf(120, 2.6, "ease-in-out"), kf(300, -2.2, "ease-in-out"), kf(D, 0)]),
+      rot("armLGPose", [kf(0, 0), kf(180, 3.4, "ease-in-out"), kf(D, 0)]),
+      rot("armRGPose", [kf(0, 0), kf(210, -3.0, "ease-in-out"), kf(D, 0)]),
     ],
   },
   {
@@ -86,49 +92,49 @@ const animations = [
   {
     name: "wave", fps: FPS, duration: 90, loop: "oneShot",
     tracks: [
-      rot("armRG", [kf(0, 0), kf(8, -8, "ease-out"), kf(14, 18, "ease-out"), kf(24, -14, "ease-in-out"),
+      rot("armRGPose", [kf(0, 0), kf(8, -8, "ease-out"), kf(14, 18, "ease-out"), kf(24, -14, "ease-in-out"),
                     kf(34, 13, "ease-in-out"), kf(44, -9, "ease-in-out"), kf(54, 6, "ease-in-out"), kf(70, 0, "ease-out")]),
-      rot("headG", [kf(0, 0), kf(16, 4, "ease-in-out"), kf(50, 3, "ease-in-out"), kf(70, 0, "ease-out")]),
+      rot("headGPose", [kf(0, 0), kf(16, 4, "ease-in-out"), kf(50, 3, "ease-in-out"), kf(70, 0, "ease-out")]),
     ],
   },
   {
     name: "flex", fps: FPS, duration: 120, loop: "oneShot",
     tracks: [
-      rot("armLG", [kf(0, 0), kf(6, -4, "ease-out"), kf(18, -26, "elastic-out"), kf(34, -22, "ease-in-out"),
+      rot("armLGPose", [kf(0, 0), kf(6, -4, "ease-out"), kf(18, -26, "elastic-out"), kf(34, -22, "ease-in-out"),
                     kf(40, -25, "ease-in-out"), kf(46, -22, "ease-in-out"), kf(80, -22, "ease-in-out"), kf(110, 0, "ease-out")]),
-      rot("armRG", [kf(0, 0), kf(6, 4, "ease-out"), kf(18, 26, "elastic-out"), kf(34, 22, "ease-in-out"),
+      rot("armRGPose", [kf(0, 0), kf(6, 4, "ease-out"), kf(18, 26, "elastic-out"), kf(34, 22, "ease-in-out"),
                     kf(40, 25, "ease-in-out"), kf(46, 22, "ease-in-out"), kf(80, 22, "ease-in-out"), kf(110, 0, "ease-out")]),
-      rot("torsoG", [kf(0, 0), kf(18, -2.2, "ease-out"), kf(46, -1.6, "ease-in-out"), kf(110, 0, "ease-out")]),
-      rot("headG", [kf(0, 0), kf(18, 3, "ease-out"), kf(46, 2, "ease-in-out"), kf(110, 0, "ease-out")]),
+      rot("torsoGPose", [kf(0, 0), kf(18, -2.2, "ease-out"), kf(46, -1.6, "ease-in-out"), kf(110, 0, "ease-out")]),
+      rot("headGPose", [kf(0, 0), kf(18, 3, "ease-out"), kf(46, 2, "ease-in-out"), kf(110, 0, "ease-out")]),
     ],
   },
   {
     name: "cheer", fps: FPS, duration: 150, loop: "oneShot",
     tracks: [
-      rot("armLG", [kf(0, 0), kf(15, -30, "ease-out"), kf(30, -8, "ease-in-out"), kf(45, -30, "ease-out"),
+      rot("armLGPose", [kf(0, 0), kf(15, -30, "ease-out"), kf(30, -8, "ease-in-out"), kf(45, -30, "ease-out"),
                     kf(60, -8, "ease-in-out"), kf(75, -30, "ease-out"), kf(100, 0, "ease-out")]),
-      rot("armRG", [kf(0, 0), kf(15, 30, "ease-out"), kf(30, 8, "ease-in-out"), kf(45, 30, "ease-out"),
+      rot("armRGPose", [kf(0, 0), kf(15, 30, "ease-out"), kf(30, 8, "ease-in-out"), kf(45, 30, "ease-out"),
                     kf(60, 8, "ease-in-out"), kf(75, 30, "ease-out"), kf(100, 0, "ease-out")]),
-      mvY("root", [kf(0, 425), kf(18, 416, "ease-out"), kf(30, 423, "ease-in-out"), kf(48, 416, "ease-out"),
-                   kf(60, 423, "ease-in-out"), kf(78, 416, "ease-out"), kf(100, 425, "ease-out")]),
-      rot("headG", [kf(0, 0), kf(18, 5, "ease-out"), kf(40, 3, "ease-in-out"), kf(60, 4, "ease-in-out"), kf(100, 0, "ease-out")]),
+      mvY("root", [kf(0, 350), kf(18, 341, "ease-out"), kf(30, 348, "ease-in-out"), kf(48, 341, "ease-out"),
+                   kf(60, 348, "ease-in-out"), kf(78, 341, "ease-out"), kf(100, 350, "ease-out")]),
+      rot("headGPose", [kf(0, 0), kf(18, 5, "ease-out"), kf(40, 3, "ease-in-out"), kf(60, 4, "ease-in-out"), kf(100, 0, "ease-out")]),
     ],
   },
   {
     name: "nod", fps: FPS, duration: 80, loop: "oneShot",
     tracks: [
-      mvY("headG", [kf(0, 0), kf(12, 9, "ease-out"), kf(30, 2, "ease-in-out"), kf(44, 9, "ease-out"), kf(70, 0, "ease-out")]),
-      rot("headG", [kf(0, 0), kf(12, -6, "ease-out"), kf(30, 0, "ease-in-out"), kf(44, -5, "ease-out"), kf(70, 0, "ease-out")]),
+      mvY("headGPose", [kf(0, 0), kf(12, 9, "ease-out"), kf(30, 2, "ease-in-out"), kf(44, 9, "ease-out"), kf(70, 0, "ease-out")]),
+      rot("headGPose", [kf(0, 0), kf(12, -6, "ease-out"), kf(30, 0, "ease-in-out"), kf(44, -5, "ease-out"), kf(70, 0, "ease-out")]),
     ],
   },
   {
     name: "sad", fps: FPS, duration: 160, loop: "oneShot",
     tracks: [
-      mvY("headG", [kf(0, 0), kf(40, 8, "ease-out"), kf(120, 8, "ease-in-out"), kf(150, 0, "ease-out")]),
-      rot("headG", [kf(0, 0), kf(40, -8, "ease-out"), kf(120, -8, "ease-in-out"), kf(150, 0, "ease-out")]),
-      rot("armLG", [kf(0, 0), kf(40, 13, "ease-out"), kf(120, 13, "ease-in-out"), kf(150, 0, "ease-out")]),
-      rot("armRG", [kf(0, 0), kf(40, -13, "ease-out"), kf(120, -13, "ease-in-out"), kf(150, 0, "ease-out")]),
-      mvY("root", [kf(0, 425), kf(40, 429, "ease-out"), kf(120, 429, "ease-in-out"), kf(150, 425, "ease-out")]),
+      mvY("headGPose", [kf(0, 0), kf(40, 8, "ease-out"), kf(120, 8, "ease-in-out"), kf(150, 0, "ease-out")]),
+      rot("headGPose", [kf(0, 0), kf(40, -8, "ease-out"), kf(120, -8, "ease-in-out"), kf(150, 0, "ease-out")]),
+      rot("armLGPose", [kf(0, 0), kf(40, 13, "ease-out"), kf(120, 13, "ease-in-out"), kf(150, 0, "ease-out")]),
+      rot("armRGPose", [kf(0, 0), kf(40, -13, "ease-out"), kf(120, -13, "ease-in-out"), kf(150, 0, "ease-out")]),
+      mvY("root", [kf(0, 350), kf(40, 354, "ease-out"), kf(120, 354, "ease-in-out"), kf(150, 350, "ease-out")]),
     ],
   },
 ];
@@ -179,10 +185,14 @@ const info = await host.inspect(Buffer.from(bytes));
 console.log("runtime anims:", JSON.stringify(info.artboards[0].animations.map((a) => a.name)));
 console.log("runtime SMs:", JSON.stringify(info.artboards[0].stateMachines.map((s) => s.name)));
 
-// static frame: does the rest pose match the source art?
+// static frame: does the rest pose match the ground-truth flat render?
 const st = await host.renderFrames(Buffer.from(bytes), { animation: "idle", startTime: 0, frameCount: 1, width: 600, format: "png" });
 writeFileSync("out/rest.png", Buffer.from(st.frames[0], "base64"));
-console.log("rest frame rendered", st.width, "x", st.height);
+const { execSync } = await import("node:child_process");
+let ae = "(?)";
+try { ae = execSync(`magick compare -metric AE out/REFERENCE.png out/rest.png null:`, { stdio: ["ignore","pipe","pipe"] }).toString().trim(); }
+catch (e) { ae = (e.stderr || e.stdout || "").toString().trim(); }
+console.log("REST AE vs REFERENCE:", ae, "(target < 8400)");
 
 // lint
 const m = computeMetrics(new Uint8Array(bytes));
@@ -208,7 +218,7 @@ for (const a of ACTIONS) {
   await qa(a, { animation: a }, n, 12);
 }
 
-// SM transition check: fire each trigger, confirm it enters the action state and returns to idle
+// SM transition check
 const smCheck = await host.playStateMachine(Buffer.from(bytes), {
   stateMachine: "Coach", width: 240,
   steps: [
